@@ -1,0 +1,1030 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; }
+  #win12 {
+    width: 100%; height: 620px; background: #0a1628;
+    position: relative; overflow: hidden; border-radius: 8px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+  #wallpaper {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 60%, #1a3a6b 0%, #0d1f3c 40%, #06111f 100%);
+    overflow: hidden;
+  }
+  .wp-glow {
+    position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.5;
+  }
+  #desktop { position: absolute; inset: 0 0 44px 0; }
+  .desk-icon {
+    position: absolute; display: flex; flex-direction: column; align-items: center;
+    gap: 4px; cursor: pointer; padding: 6px; border-radius: 8px;
+    transition: background 0.15s;
+  }
+  .desk-icon:hover { background: rgba(255,255,255,0.12); }
+  .desk-icon.selected { background: rgba(255,255,255,0.18); }
+  .desk-icon .ico { font-size: 36px; line-height: 1; }
+  .desk-icon span { font-size: 11px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); text-align: center; max-width: 72px; word-break: break-word; }
+  #taskbar {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 44px;
+    background: rgba(18,28,48,0.92); backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
+  }
+  #taskbar-center { display: flex; align-items: center; gap: 4px; position: absolute; left: 50%; transform: translateX(-50%); }
+  #taskbar-right { display: flex; align-items: center; gap: 6px; }
+  .tb-btn {
+    width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.15s; font-size: 20px; position: relative;
+  }
+  .tb-btn:hover { background: rgba(255,255,255,0.1); }
+  .tb-btn.active { background: rgba(255,255,255,0.15); }
+  .tb-btn .dot {
+    position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+    width: 4px; height: 4px; background: #4fc3f7; border-radius: 50%;
+  }
+  #clock { color: #fff; font-size: 11px; text-align: center; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+  #clock:hover { background: rgba(255,255,255,0.1); }
+  .sys-icon { font-size: 16px; cursor: pointer; color: #ccc; padding: 4px 3px; border-radius: 4px; }
+  .sys-icon:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .window {
+    position: absolute; border-radius: 10px;
+    background: rgba(18,28,50,0.97); border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7); min-width: 400px; overflow: hidden;
+    animation: winOpen 0.15s ease-out;
+  }
+  @keyframes winOpen { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .win-titlebar {
+    height: 36px; display: flex; align-items: center; padding: 0 12px;
+    background: rgba(25,40,70,0.9); cursor: move; border-bottom: 1px solid rgba(255,255,255,0.08);
+    justify-content: space-between;
+  }
+  .win-title { font-size: 12px; color: #ccc; font-weight: 400; display: flex; align-items: center; gap: 8px; }
+  .win-title span { font-size: 16px; }
+  .win-controls { display: flex; gap: 4px; }
+  .wc-btn {
+    width: 28px; height: 20px; border-radius: 4px; font-size: 11px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: #aaa;
+    transition: background 0.1s, color 0.1s;
+  }
+  .wc-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  .wc-close:hover { background: #c42b1c; color: #fff; }
+  .win-body { color: #e0e0e0; }
+  #start-menu {
+    position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
+    width: 640px; height: 500px; background: rgba(14,24,44,0.97);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8); display: none; flex-direction: column;
+    backdrop-filter: blur(30px); animation: winOpen 0.15s ease-out;
+    overflow: hidden;
+  }
+  #start-menu.open { display: flex; }
+  #sm-search {
+    margin: 16px 20px 8px; padding: 8px 14px; border-radius: 8px;
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14);
+    color: #fff; font-size: 13px; outline: none; width: calc(100% - 40px);
+  }
+  #sm-search::placeholder { color: #888; }
+  .sm-section-title { font-size: 11px; color: #888; padding: 8px 20px 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .sm-apps { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 4px 16px; }
+  .sm-app {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 10px 4px; border-radius: 8px; cursor: pointer; transition: background 0.15s;
+  }
+  .sm-app:hover { background: rgba(255,255,255,0.1); }
+  .sm-app .ico { font-size: 28px; }
+  .sm-app span { font-size: 10px; color: #ccc; text-align: center; }
+  .sm-recents { display: flex; flex-direction: column; gap: 2px; padding: 4px 16px; }
+  .sm-recent {
+    display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 6px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .sm-recent:hover { background: rgba(255,255,255,0.1); }
+  .sm-recent .ico { font-size: 20px; }
+  .sm-recent-info { font-size: 12px; color: #ccc; }
+  .sm-recent-sub { font-size: 10px; color: #666; }
+  #sm-footer {
+    margin-top: auto; padding: 10px 20px; border-top: 1px solid rgba(255,255,255,0.07);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .sm-user { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+  .sm-user:hover { background: rgba(255,255,255,0.1); }
+  .sm-avatar {
+    width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #4fc3f7, #2979ff);
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff;
+  }
+  .sm-username { font-size: 13px; color: #ccc; }
+  .sm-power { display: flex; gap: 4px; }
+  .sm-pow-btn { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; transition: background 0.15s; }
+  .sm-pow-btn:hover { background: rgba(255,255,255,0.1); }
+  #notif-center {
+    position: absolute; right: 8px; bottom: 50px; width: 360px;
+    background: rgba(14,24,44,0.97); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px; padding: 14px; display: none; flex-direction: column; gap: 10px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7); max-height: 500px; overflow-y: auto;
+    animation: winOpen 0.15s ease-out;
+  }
+  #notif-center.open { display: flex; }
+  .nc-header { display: flex; justify-content: space-between; align-items: center; }
+  .nc-header h3 { font-size: 14px; color: #fff; font-weight: 500; }
+  .nc-clear { font-size: 11px; color: #4fc3f7; cursor: pointer; }
+  .nc-qs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .qs-tile {
+    background: rgba(255,255,255,0.07); border-radius: 8px; padding: 8px;
+    cursor: pointer; transition: background 0.15s; text-align: center;
+  }
+  .qs-tile:hover, .qs-tile.on { background: rgba(79,195,247,0.2); }
+  .qs-tile .ico { font-size: 18px; }
+  .qs-tile span { font-size: 10px; color: #aaa; display: block; margin-top: 2px; }
+  .notif-card {
+    background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px 12px;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .notif-card .nc-app { font-size: 10px; color: #888; margin-bottom: 3px; }
+  .notif-card .nc-title { font-size: 12px; color: #ddd; font-weight: 500; }
+  .notif-card .nc-body { font-size: 11px; color: #888; margin-top: 2px; }
+  .brightness-row { display: flex; align-items: center; gap: 8px; }
+  .brightness-row span { font-size: 12px; color: #aaa; }
+  .brightness-row input[type=range] { flex: 1; }
+  .file-explorer .fe-toolbar {
+    height: 40px; background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.07);
+    display: flex; align-items: center; padding: 0 10px; gap: 6px;
+  }
+  .fe-navbtn { width: 26px; height: 26px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; color: #aaa; }
+  .fe-navbtn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .fe-addr {
+    flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 5px; padding: 3px 10px; font-size: 12px; color: #ccc; cursor: pointer;
+    display: flex; align-items: center;
+  }
+  .fe-layout { display: flex; height: calc(100% - 40px); }
+  .fe-sidebar { width: 160px; padding: 8px; border-right: 1px solid rgba(255,255,255,0.07); }
+  .fe-nav-item {
+    display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px;
+    font-size: 12px; color: #bbb; cursor: pointer; transition: background 0.1s;
+  }
+  .fe-nav-item:hover, .fe-nav-item.active { background: rgba(255,255,255,0.1); color: #fff; }
+  .fe-nav-item .ico { font-size: 16px; }
+  .fe-content { flex: 1; padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; align-content: start; overflow-y: auto; }
+  .fe-file {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 4px; border-radius: 6px; cursor: pointer; transition: background 0.1s;
+  }
+  .fe-file:hover { background: rgba(255,255,255,0.1); }
+  .fe-file.selected { background: rgba(79,195,247,0.2); }
+  .fe-file .ico { font-size: 32px; }
+  .fe-file span { font-size: 10px; color: #ccc; text-align: center; word-break: break-word; max-width: 76px; }
+  .settings-win .s-sidebar { width: 180px; border-right: 1px solid rgba(255,255,255,0.07); padding: 10px; }
+  .s-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; color: #bbb; transition: background 0.1s; }
+  .s-item:hover, .s-item.active { background: rgba(255,255,255,0.1); color: #fff; }
+  .s-item .ico { font-size: 18px; }
+  .s-content { flex: 1; padding: 16px; overflow-y: auto; }
+  .s-section { margin-bottom: 20px; }
+  .s-section h4 { font-size: 13px; color: #fff; font-weight: 500; margin-bottom: 10px; }
+  .s-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 6px; }
+  .s-row-label { font-size: 12px; color: #ccc; }
+  .s-row-sub { font-size: 10px; color: #666; }
+  .toggle { width: 40px; height: 22px; background: #4fc3f7; border-radius: 11px; position: relative; cursor: pointer; transition: background 0.2s; }
+  .toggle.off { background: rgba(255,255,255,0.15); }
+  .toggle::after { content: ''; position: absolute; width: 16px; height: 16px; background: #fff; border-radius: 50%; top: 3px; left: 21px; transition: left 0.2s; }
+  .toggle.off::after { left: 3px; }
+  .context-menu {
+    position: absolute; background: rgba(18,30,55,0.97); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px; padding: 4px; min-width: 180px; box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    display: none; z-index: 9999; animation: winOpen 0.1s ease-out;
+  }
+  .ctx-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; color: #ccc; transition: background 0.1s; }
+  .ctx-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .ctx-item .ico { font-size: 14px; }
+  .ctx-sep { height: 1px; background: rgba(255,255,255,0.08); margin: 3px 0; }
+  #widget-panel {
+    position: absolute; right: 8px; top: 20px; width: 340px;
+    background: rgba(14,24,44,0.97); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px; padding: 14px; display: none; flex-direction: column; gap: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7); animation: winOpen 0.15s ease-out;
+  }
+  #widget-panel.open { display: flex; }
+  .widget-card { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; }
+  .widget-card h4 { font-size: 11px; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .weather-big { display: flex; align-items: center; gap: 12px; }
+  .weather-big .wo { font-size: 48px; }
+  .weather-temp { font-size: 36px; font-weight: 300; color: #fff; }
+  .weather-desc { font-size: 12px; color: #aaa; }
+  .weather-city { font-size: 13px; color: #ccc; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-day { text-align: center; font-size: 11px; color: #888; padding: 3px; }
+  .cal-date { text-align: center; font-size: 11px; padding: 3px; border-radius: 50%; cursor: pointer; color: #bbb; }
+  .cal-date:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .cal-date.today { background: #4fc3f7; color: #000; font-weight: 600; border-radius: 50%; }
+  .news-item { padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .news-item:last-child { border-bottom: none; }
+  .news-item h5 { font-size: 12px; color: #ccc; font-weight: 400; }
+  .news-item p { font-size: 10px; color: #666; margin-top: 2px; }
+  #search-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px); display: none; align-items: flex-start; justify-content: center;
+    padding-top: 80px; z-index: 500;
+  }
+  #search-overlay.open { display: flex; }
+  .search-box { width: 580px; }
+  .s-input-wrap { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 12px 16px; }
+  .s-input-wrap input { flex: 1; background: none; border: none; color: #fff; font-size: 18px; outline: none; }
+  .s-input-wrap span { font-size: 22px; }
+  .s-results { margin-top: 12px; background: rgba(14,24,44,0.97); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 8px; }
+  .s-result { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer; transition: background 0.1s; }
+  .s-result:hover { background: rgba(255,255,255,0.1); }
+  .s-result .ico { font-size: 20px; }
+  .s-result-info { font-size: 13px; color: #ccc; }
+  .s-result-sub { font-size: 11px; color: #666; }
+  #snip-tool {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    background: rgba(14,24,44,0.97); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 40px; padding: 8px 16px; display: none; gap: 6px; align-items: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  }
+  #snip-tool.open { display: flex; }
+  .snip-btn { padding: 6px 14px; border-radius: 30px; font-size: 12px; cursor: pointer; color: #ccc; transition: background 0.15s; }
+  .snip-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .snip-btn.active { background: rgba(79,195,247,0.25); color: #4fc3f7; }
+  #taskbar-left { display: flex; align-items: center; }
+</style>
+
+<div id="win12">
+  <div id="wallpaper">
+    <div class="wp-glow" style="width:400px;height:400px;background:#1565c0;top:-100px;left:-50px;"></div>
+    <div class="wp-glow" style="width:500px;height:500px;background:#0d47a1;bottom:-150px;right:-100px;"></div>
+    <div class="wp-glow" style="width:300px;height:300px;background:#4fc3f720;top:50%;left:40%;"></div>
+    <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.05" xmlns="http://www.w3.org/2000/svg">
+      <defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#fff" stroke-width="0.5"/></pattern></defs>
+      <rect width="100%" height="100%" fill="url(#grid)"/>
+    </svg>
+    <div style="position:absolute;bottom:60px;left:50%;transform:translateX(-50%);text-align:center">
+      <div style="font-size:72px;font-weight:200;color:rgba(255,255,255,0.06);letter-spacing:8px;font-family:'Segoe UI'">WINDOWS 12</div>
+    </div>
+  </div>
+
+  <div id="desktop">
+    <div class="desk-icon" style="left:20px;top:20px" onclick="openApp('explorer')">
+      <div class="ico">📁</div><span>File Explorer</span>
+    </div>
+    <div class="desk-icon" style="left:20px;top:110px" onclick="openApp('settings')">
+      <div class="ico">⚙️</div><span>Settings</span>
+    </div>
+    <div class="desk-icon" style="left:20px;top:200px" onclick="openApp('edge')">
+      <div class="ico">🌐</div><span>Microsoft Edge</span>
+    </div>
+    <div class="desk-icon" style="left:20px;top:290px" onclick="openApp('store')">
+      <div class="ico">🛍️</div><span>Microsoft Store</span>
+    </div>
+    <div class="desk-icon" style="left:20px;top:380px" onclick="openApp('terminal')">
+      <div class="ico">🖥️</div><span>Terminal</span>
+    </div>
+    <div class="desk-icon" style="right:20px;top:20px" onclick="openApp('notepad')">
+      <div class="ico">📝</div><span>Notepad</span>
+    </div>
+    <div class="desk-icon" style="right:20px;top:110px" onclick="openApp('calc')">
+      <div class="ico">🧮</div><span>Calculator</span>
+    </div>
+    <div class="desk-icon" style="right:20px;top:200px" onclick="openApp('photos')">
+      <div class="ico">🖼️</div><span>Photos</span>
+    </div>
+    <div class="desk-icon" style="right:20px;top:290px">
+      <div class="ico">🗑️</div><span>Recycle Bin</span>
+    </div>
+  </div>
+
+  <div id="taskbar">
+    <div id="taskbar-left">
+      <div class="tb-btn" onclick="toggleSearch()" title="Search (Win+S)">🔍</div>
+    </div>
+    <div id="taskbar-center">
+      <div class="tb-btn" id="start-btn" onclick="toggleStart()" title="Start">
+        <svg width="18" height="18" viewBox="0 0 18 18"><rect x="0" y="0" width="8" height="8" fill="#4fc3f7" rx="1"/><rect x="10" y="0" width="8" height="8" fill="#4fc3f7" rx="1"/><rect x="0" y="10" width="8" height="8" fill="#4fc3f7" rx="1"/><rect x="10" y="10" width="8" height="8" fill="#4fc3f7" rx="1"/></svg>
+      </div>
+      <div class="tb-btn" onclick="openApp('explorer')" title="File Explorer">📁<div class="dot"></div></div>
+      <div class="tb-btn" onclick="openApp('edge')" title="Edge">🌐</div>
+      <div class="tb-btn" onclick="openApp('store')" title="Store">🛍️</div>
+      <div class="tb-btn" onclick="openApp('mail')" title="Mail">📧</div>
+      <div class="tb-btn" onclick="openApp('calendar')" title="Calendar">📅</div>
+      <div class="tb-btn" onclick="openApp('photos')" title="Photos">🖼️</div>
+      <div class="tb-btn" onclick="openApp('music')" title="Music">🎵</div>
+      <div class="tb-btn" onclick="openApp('teams')" title="Teams">👥<div class="dot"></div></div>
+      <div class="tb-btn" onclick="openApp('terminal')" title="Terminal">🖥️</div>
+      <div class="tb-btn" onclick="toggleSnip()" title="Snipping Tool">✂️</div>
+    </div>
+    <div id="taskbar-right">
+      <div class="sys-icon" title="Network">📶</div>
+      <div class="sys-icon" title="Sound">🔊</div>
+      <div class="sys-icon" title="Battery">🔋</div>
+      <div class="sys-icon" onclick="toggleWidgets()" title="Widgets">🗂️</div>
+      <div id="clock" onclick="toggleNotif()">
+        <div id="clock-time" style="font-weight:500;font-size:12px;color:#fff;"></div>
+        <div id="clock-date" style="font-size:10px;color:#aaa;"></div>
+      </div>
+      <div class="sys-icon" onclick="toggleNotif()" title="Notifications">🔔</div>
+    </div>
+  </div>
+
+  <div id="start-menu">
+    <input id="sm-search" type="text" placeholder="🔍  Search for apps, files, settings..." oninput="filterApps(this.value)">
+    <div class="sm-section-title">Pinned</div>
+    <div class="sm-apps" id="sm-pinned">
+      <div class="sm-app" onclick="openApp('edge');toggleStart()"><div class="ico">🌐</div><span>Edge</span></div>
+      <div class="sm-app" onclick="openApp('settings');toggleStart()"><div class="ico">⚙️</div><span>Settings</span></div>
+      <div class="sm-app" onclick="openApp('store');toggleStart()"><div class="ico">🛍️</div><span>Store</span></div>
+      <div class="sm-app" onclick="openApp('mail');toggleStart()"><div class="ico">📧</div><span>Mail</span></div>
+      <div class="sm-app" onclick="openApp('calendar');toggleStart()"><div class="ico">📅</div><span>Calendar</span></div>
+      <div class="sm-app" onclick="openApp('photos');toggleStart()"><div class="ico">🖼️</div><span>Photos</span></div>
+      <div class="sm-app" onclick="openApp('calc');toggleStart()"><div class="ico">🧮</div><span>Calculator</span></div>
+      <div class="sm-app" onclick="openApp('notepad');toggleStart()"><div class="ico">📝</div><span>Notepad</span></div>
+      <div class="sm-app" onclick="openApp('music');toggleStart()"><div class="ico">🎵</div><span>Media Player</span></div>
+      <div class="sm-app" onclick="openApp('teams');toggleStart()"><div class="ico">👥</div><span>Teams</span></div>
+      <div class="sm-app" onclick="openApp('terminal');toggleStart()"><div class="ico">🖥️</div><span>Terminal</span></div>
+      <div class="sm-app" onclick="openApp('explorer');toggleStart()"><div class="ico">📁</div><span>File Explorer</span></div>
+    </div>
+    <div class="sm-section-title">Recommended</div>
+    <div class="sm-recents">
+      <div class="sm-recent"><div class="ico">📄</div><div><div class="sm-recent-info">Report_Q1_2025.docx</div><div class="sm-recent-sub">Modified 2h ago</div></div></div>
+      <div class="sm-recent"><div class="ico">📊</div><div><div class="sm-recent-info">Sales_Data.xlsx</div><div class="sm-recent-sub">Modified yesterday</div></div></div>
+      <div class="sm-recent"><div class="ico">🖼️</div><div><div class="sm-recent-info">Wallpaper_collection</div><div class="sm-recent-sub">Modified 3 days ago</div></div></div>
+    </div>
+    <div id="sm-footer">
+      <div class="sm-user"><div class="sm-avatar">MG</div><div class="sm-username">Mohit Gautam</div></div>
+      <div class="sm-power">
+        <div class="sm-pow-btn" title="Sleep">🌙</div>
+        <div class="sm-pow-btn" title="Restart">🔄</div>
+        <div class="sm-pow-btn" title="Shut down">⏻</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="notif-center">
+    <div class="nc-header"><h3>Notification Center</h3><span class="nc-clear" onclick="clearNotifs()">Clear all</span></div>
+    <div class="nc-qs">
+      <div class="qs-tile on" onclick="this.classList.toggle('on')"><div class="ico">📶</div><span>Wi-Fi</span></div>
+      <div class="qs-tile on" onclick="this.classList.toggle('on')"><div class="ico">🔵</div><span>Bluetooth</span></div>
+      <div class="qs-tile" onclick="this.classList.toggle('on')"><div class="ico">✈️</div><span>Airplane</span></div>
+      <div class="qs-tile" onclick="this.classList.toggle('on')"><div class="ico">🌙</div><span>Focus</span></div>
+      <div class="qs-tile on" onclick="this.classList.toggle('on')"><div class="ico">🌍</div><span>VPN</span></div>
+      <div class="qs-tile" onclick="this.classList.toggle('on')"><div class="ico">♿</div><span>Accessibility</span></div>
+      <div class="qs-tile on" onclick="this.classList.toggle('on')"><div class="ico">🔒</div><span>Location</span></div>
+      <div class="qs-tile" onclick="this.classList.toggle('on')"><div class="ico">🖥️</div><span>Cast</span></div>
+    </div>
+    <div class="brightness-row"><span>🔆</span><input type="range" min="0" max="100" value="80"><span>80%</span></div>
+    <div id="notif-list">
+      <div class="notif-card"><div class="nc-app">Microsoft Teams</div><div class="nc-title">Ravi Sharma mentioned you</div><div class="nc-body">"Hey @Mohit can you check the firmware?"</div></div>
+      <div class="notif-card"><div class="nc-app">Windows Update</div><div class="nc-title">Update available</div><div class="nc-body">Windows 12 Build 26100.2 is ready to install.</div></div>
+      <div class="notif-card"><div class="nc-app">Microsoft Edge</div><div class="nc-title">3 tabs are using high memory</div><div class="nc-body">Edge Efficiency Mode can help save resources.</div></div>
+    </div>
+  </div>
+
+  <div id="widget-panel">
+    <div class="widget-card">
+      <h4>Weather · Nagpur</h4>
+      <div class="weather-big">
+        <div class="wo">☀️</div>
+        <div>
+          <div class="weather-temp">38°C</div>
+          <div class="weather-desc">Partly Sunny</div>
+          <div class="weather-city">Nagpur, Maharashtra</div>
+        </div>
+      </div>
+    </div>
+    <div class="widget-card">
+      <h4>Calendar · May 2026</h4>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div class="widget-card">
+      <h4>News</h4>
+      <div class="news-item"><h5>Windows 12 AI Copilot+ gets new features</h5><p>Technology · 2h ago</p></div>
+      <div class="news-item"><h5>India tech sector hits record growth</h5><p>Business · 4h ago</p></div>
+      <div class="news-item"><h5>IPL 2026: Mumbai leads points table</h5><p>Cricket · 1h ago</p></div>
+    </div>
+  </div>
+
+  <div id="snip-tool">
+    <span style="font-size:12px;color:#aaa;padding-right:8px;">Snipping Tool</span>
+    <div class="snip-btn active" onclick="setSnipMode(this,'rect')">⬜ Rectangle</div>
+    <div class="snip-btn" onclick="setSnipMode(this,'free')">🖊️ Freeform</div>
+    <div class="snip-btn" onclick="setSnipMode(this,'window')">🪟 Window</div>
+    <div class="snip-btn" onclick="setSnipMode(this,'full')">🖥️ Fullscreen</div>
+    <div class="snip-btn" style="margin-left:8px;background:rgba(79,195,247,0.2);color:#4fc3f7;" onclick="closeSnip()">✕</div>
+  </div>
+
+  <div id="search-overlay" onclick="closeSearch(event)">
+    <div class="search-box" onclick="event.stopPropagation()">
+      <div class="s-input-wrap"><span>🔍</span><input type="text" placeholder="Search Windows 12" oninput="updateSearch(this.value)" id="s-input" autofocus></div>
+      <div class="s-results" id="s-results">
+        <div class="s-result" onclick="openApp('settings');closeSearch()"><div class="ico">⚙️</div><div><div class="s-result-info">Settings</div><div class="s-result-sub">System App</div></div></div>
+        <div class="s-result" onclick="openApp('edge');closeSearch()"><div class="ico">🌐</div><div><div class="s-result-info">Microsoft Edge</div><div class="s-result-sub">Browser</div></div></div>
+        <div class="s-result" onclick="openApp('terminal');closeSearch()"><div class="ico">🖥️</div><div><div class="s-result-info">Windows Terminal</div><div class="s-result-sub">Developer Tool</div></div></div>
+        <div class="s-result" onclick="openApp('calc');closeSearch()"><div class="ico">🧮</div><div><div class="s-result-info">Calculator</div><div class="s-result-sub">App</div></div></div>
+        <div class="s-result" onclick="openApp('notepad');closeSearch()"><div class="ico">📝</div><div><div class="s-result-info">Notepad</div><div class="s-result-sub">App</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="context-menu" class="context-menu">
+    <div class="ctx-item" onclick="closeCtx();openApp('settings')"><span class="ico">🖼️</span>Personalize</div>
+    <div class="ctx-item" onclick="closeCtx()"><span class="ico">🔲</span>View</div>
+    <div class="ctx-item" onclick="closeCtx();toggleWidgets()"><span class="ico">🗂️</span>Show Widgets</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="closeCtx()"><span class="ico">📋</span>Paste</div>
+    <div class="ctx-item" onclick="closeCtx()"><span class="ico">♻️</span>Refresh</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="closeCtx();openApp('settings')"><span class="ico">⚙️</span>Display Settings</div>
+    <div class="ctx-item" onclick="closeCtx();openApp('settings')"><span class="ico">🎨</span>Personalization</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="closeCtx();openApp('terminal')"><span class="ico">🖥️</span>Open Terminal</div>
+  </div>
+
+  <div id="windows-container"></div>
+</div>
+
+<script>
+let zTop = 100;
+let openWindows = {};
+let calcVal = '';
+let calcDisplay = '0';
+let notepadContent = '';
+let calcPrev = '';
+let calcOp = '';
+
+function updateClock() {
+  const now = new Date();
+  const t = now.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+  const d = now.toLocaleDateString('en-IN', {weekday:'short',month:'short',day:'numeric'});
+  const tel = document.getElementById('clock-time');
+  const del = document.getElementById('clock-date');
+  if(tel) tel.textContent = t;
+  if(del) del.textContent = d;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+function buildCalendar() {
+  const grid = document.getElementById('cal-grid');
+  if(!grid) return;
+  const days = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  const today = new Date();
+  const year = today.getFullYear(), month = today.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  let html = days.map(d=>`<div class="cal-day">${d}</div>`).join('');
+  for(let i=0;i<firstDay;i++) html += `<div class="cal-date"></div>`;
+  for(let d=1;d<=daysInMonth;d++) {
+    const isToday = d === today.getDate();
+    html += `<div class="cal-date ${isToday?'today':''}">${d}</div>`;
+  }
+  grid.innerHTML = html;
+}
+buildCalendar();
+
+function toggleStart() {
+  const sm = document.getElementById('start-menu');
+  const nc = document.getElementById('notif-center');
+  const wp = document.getElementById('widget-panel');
+  nc.classList.remove('open');
+  wp.classList.remove('open');
+  sm.classList.toggle('open');
+}
+function toggleNotif() {
+  const nc = document.getElementById('notif-center');
+  const sm = document.getElementById('start-menu');
+  const wp = document.getElementById('widget-panel');
+  sm.classList.remove('open');
+  wp.classList.remove('open');
+  nc.classList.toggle('open');
+}
+function toggleWidgets() {
+  const wp = document.getElementById('widget-panel');
+  const sm = document.getElementById('start-menu');
+  const nc = document.getElementById('notif-center');
+  sm.classList.remove('open');
+  nc.classList.remove('open');
+  wp.classList.toggle('open');
+}
+function clearNotifs() {
+  document.getElementById('notif-list').innerHTML = '<div style="text-align:center;color:#666;font-size:12px;padding:16px;">No notifications</div>';
+}
+function toggleSearch() {
+  const so = document.getElementById('search-overlay');
+  so.classList.toggle('open');
+  if(so.classList.contains('open')) setTimeout(()=>document.getElementById('s-input').focus(), 100);
+}
+function closeSearch(e) {
+  document.getElementById('search-overlay').classList.remove('open');
+}
+function updateSearch(v) {}
+function toggleSnip() {
+  document.getElementById('snip-tool').classList.toggle('open');
+}
+function closeSnip() {
+  document.getElementById('snip-tool').classList.remove('open');
+}
+function setSnipMode(el, mode) {
+  document.querySelectorAll('.snip-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+document.getElementById('win12').addEventListener('contextmenu', function(e) {
+  if(e.target.closest('.window') || e.target.closest('#taskbar') || e.target.closest('#start-menu')) return;
+  e.preventDefault();
+  const ctx = document.getElementById('context-menu');
+  const rect = document.getElementById('win12').getBoundingClientRect();
+  let x = e.clientX - rect.left, y = e.clientY - rect.top;
+  if(x + 190 > rect.width) x = rect.width - 195;
+  if(y + 220 > rect.height) y = rect.height - 225;
+  ctx.style.left = x + 'px';
+  ctx.style.top = y + 'px';
+  ctx.style.display = 'block';
+});
+document.getElementById('win12').addEventListener('click', function(e) {
+  if(!e.target.closest('#context-menu')) closeCtx();
+  if(!e.target.closest('#start-menu') && !e.target.closest('#start-btn')) document.getElementById('start-menu').classList.remove('open');
+  if(!e.target.closest('#notif-center') && !e.target.closest('#clock') && !e.target.closest('.sys-icon')) document.getElementById('notif-center').classList.remove('open');
+  if(!e.target.closest('#widget-panel') && !e.target.closest('.sys-icon')) document.getElementById('widget-panel').classList.remove('open');
+});
+function closeCtx() {
+  document.getElementById('context-menu').style.display = 'none';
+}
+function filterApps(v) {}
+
+function makeWindow(id, title, icon, w, h, content, extraClass) {
+  const cont = document.getElementById('windows-container');
+  const existing = document.getElementById('win-'+id);
+  if(existing) { existing.style.zIndex = ++zTop; return; }
+  const div = document.createElement('div');
+  div.id = 'win-'+id;
+  div.className = 'window' + (extraClass ? ' '+extraClass : '');
+  const left = 80 + Math.random()*120, top = 40 + Math.random()*60;
+  div.style.cssText = `left:${left}px;top:${top}px;width:${w}px;height:${h}px;z-index:${++zTop}`;
+  div.innerHTML = `
+    <div class="win-titlebar" id="tb-${id}">
+      <div class="win-title"><span>${icon}</span>${title}</div>
+      <div class="win-controls">
+        <div class="wc-btn" onclick="minimizeWin('${id}')" title="Minimize">─</div>
+        <div class="wc-btn" onclick="maximizeWin('${id}')" title="Maximize">⬜</div>
+        <div class="wc-btn wc-close" onclick="closeWin('${id}')" title="Close">✕</div>
+      </div>
+    </div>
+    <div class="win-body" style="height:calc(100% - 36px);overflow:hidden;">${content}</div>`;
+  cont.appendChild(div);
+  div.addEventListener('mousedown', ()=>{ div.style.zIndex = ++zTop; });
+  makeDraggable(div, document.getElementById('tb-'+id));
+  openWindows[id] = div;
+}
+
+function makeDraggable(win, handle) {
+  let ox, oy, dragging = false;
+  handle.addEventListener('mousedown', function(e) {
+    if(e.target.closest('.wc-btn')) return;
+    dragging = true;
+    ox = e.clientX - win.offsetLeft;
+    oy = e.clientY - win.offsetTop;
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+  function onMove(e) {
+    if(!dragging) return;
+    const parent = document.getElementById('win12');
+    let nx = e.clientX - ox, ny = e.clientY - oy;
+    nx = Math.max(0, Math.min(parent.offsetWidth - win.offsetWidth, nx));
+    ny = Math.max(0, Math.min(parent.offsetHeight - win.offsetHeight - 44, ny));
+    win.style.left = nx + 'px';
+    win.style.top = ny + 'px';
+  }
+  function onUp() { dragging = false; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
+}
+
+function closeWin(id) {
+  const el = document.getElementById('win-'+id);
+  if(el) el.remove();
+  delete openWindows[id];
+}
+function minimizeWin(id) {
+  const el = document.getElementById('win-'+id);
+  if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+function maximizeWin(id) {
+  const el = document.getElementById('win-'+id);
+  if(!el) return;
+  if(el.dataset.maxed) {
+    el.style.left = el.dataset.ox; el.style.top = el.dataset.oy;
+    el.style.width = el.dataset.ow; el.style.height = el.dataset.oh;
+    delete el.dataset.maxed;
+  } else {
+    el.dataset.ox = el.style.left; el.dataset.oy = el.style.top;
+    el.dataset.ow = el.style.width; el.dataset.oh = el.style.height;
+    el.style.left = '0'; el.style.top = '0';
+    el.style.width = '100%'; el.style.height = 'calc(100% - 44px)';
+    el.dataset.maxed = '1';
+  }
+}
+
+function openApp(id) {
+  document.getElementById('start-menu').classList.remove('open');
+  switch(id) {
+    case 'explorer': openExplorer(); break;
+    case 'settings': openSettings(); break;
+    case 'edge': openEdge(); break;
+    case 'store': openStore(); break;
+    case 'notepad': openNotepad(); break;
+    case 'calc': openCalc(); break;
+    case 'terminal': openTerminal(); break;
+    case 'mail': openMail(); break;
+    case 'calendar': openCalendarApp(); break;
+    case 'photos': openPhotos(); break;
+    case 'music': openMusic(); break;
+    case 'teams': openTeams(); break;
+  }
+}
+
+function openExplorer() {
+  const files = ['Documents','Downloads','Music','Pictures','Videos','Desktop'];
+  const fileIcons = {'Documents':'📄','Downloads':'⬇️','Music':'🎵','Pictures':'🖼️','Videos':'🎬','Desktop':'🖥️'};
+  const items = ['Report_Q1.docx','Sales.xlsx','Project_ESP32.pdf','presentation.pptx','code.zip','notes.txt','firmware.bin','schematic.pdf'];
+  const itemIcons = {'docx':'📄','xlsx':'📊','pdf':'📕','pptx':'📊','zip':'🗜️','txt':'📝','bin':'⚙️'};
+  const navItems = [
+    {ico:'⭐',label:'Quick Access'},{ico:'🏠',label:'Home'},{ico:'☁️',label:'OneDrive'},{ico:'🖥️',label:'This PC'},
+    {ico:'📄',label:'Documents'},{ico:'⬇️',label:'Downloads'},{ico:'🎵',label:'Music'},
+    {ico:'🖼️',label:'Pictures'},{ico:'🎬',label:'Videos'}
+  ];
+  const sidebar = navItems.map(n=>`<div class="fe-nav-item ${n.label==='Home'?'active':''}" onclick="this.parentNode.querySelectorAll('.fe-nav-item').forEach(x=>x.classList.remove('active'));this.classList.add('active')"><span class="ico">${n.ico}</span>${n.label}</div>`).join('');
+  const fileGrid = items.map(f=>{
+    const ext = f.split('.').pop();
+    const ico = itemIcons[ext] || '📄';
+    return `<div class="fe-file" onclick="this.parentNode.querySelectorAll('.fe-file').forEach(x=>x.classList.remove('selected'));this.classList.add('selected')"><span class="ico">${ico}</span><span>${f}</span></div>`;
+  }).join('');
+  const content = `<div class="file-explorer" style="height:100%;display:flex;flex-direction:column;">
+    <div class="fe-toolbar">
+      <div class="fe-navbtn">←</div><div class="fe-navbtn">→</div><div class="fe-navbtn">⬆</div>
+      <div class="fe-addr">📁 &nbsp; This PC &gt; Documents</div>
+      <div class="fe-navbtn">🔍</div>
+    </div>
+    <div class="fe-layout">
+      <div class="fe-sidebar">${sidebar}</div>
+      <div class="fe-content">${fileGrid}</div>
+    </div>
+  </div>`;
+  makeWindow('explorer','File Explorer','📁',580,400,content,'');
+}
+
+function openSettings() {
+  const items = [{ico:'🏠',l:'System'},{ico:'🌐',l:'Network'},{ico:'🎨',l:'Personalization'},{ico:'📱',l:'Bluetooth'},{ico:'🔒',l:'Privacy'},{ico:'🔄',l:'Windows Update'},{ico:'🔋',l:'Power'},{ico:'⌨️',l:'Keyboard'},{ico:'🖱️',l:'Mouse'},{ico:'🖨️',l:'Printers'},{ico:'🔊',l:'Sound'},{ico:'📱',l:'Display'}];
+  const sidebar = items.map((it,i)=>`<div class="s-item ${i===0?'active':''}" onclick="this.parentNode.querySelectorAll('.s-item').forEach(x=>x.classList.remove('active'));this.classList.add('active')"><span class="ico">${it.ico}</span>${it.l}</div>`).join('');
+  const rows = [
+    {label:'Dark Mode',sub:'App and system dark theme',on:true},
+    {label:'Night Light',sub:'Reduces blue light after sunset',on:false},
+    {label:'Transparency Effects',sub:'Visual transparency effects',on:true},
+    {label:'Animation Effects',sub:'Smooth animations and transitions',on:true},
+    {label:'Auto-Hide Taskbar',sub:'Taskbar hides when not in use',on:false},
+    {label:'Focus Assist',sub:'Reduce distracting notifications',on:false},
+  ];
+  const rowsHtml = rows.map(r=>`<div class="s-row"><div><div class="s-row-label">${r.label}</div><div class="s-row-sub">${r.sub}</div></div><div class="toggle ${r.on?'':'off'}" onclick="this.classList.toggle('off')"></div></div>`).join('');
+  const content = `<div style="display:flex;height:100%;" class="settings-win">
+    <div class="s-sidebar">${sidebar}</div>
+    <div class="s-content">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:48px;height:48px;background:linear-gradient(135deg,#4fc3f7,#2979ff);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:#fff;">MG</div>
+        <div><div style="font-size:14px;color:#fff;font-weight:500;">Mohit Gautam</div><div style="font-size:11px;color:#888;">mohit@outlook.com · Windows 12 Pro</div></div>
+      </div>
+      <div class="s-section"><h4>Personalization</h4>${rowsHtml}</div>
+      <div class="s-row"><div><div class="s-row-label">Display Resolution</div><div class="s-row-sub">1920 × 1080 (Recommended)</div></div><div style="font-size:11px;color:#4fc3f7;cursor:pointer;">Change</div></div>
+    </div>
+  </div>`;
+  makeWindow('settings','Settings','⚙️',620,440,content,'');
+}
+
+function openEdge() {
+  const content = `<div style="display:flex;flex-direction:column;height:100%;background:#1a2540;">
+    <div style="background:#111d35;padding:6px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,0.07);">
+      <div style="display:flex;gap:4px;">
+        <div style="width:24px;height:24px;border-radius:50%;background:#1d2c4a;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;">←</div>
+        <div style="width:24px;height:24px;border-radius:50%;background:#1d2c4a;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;">→</div>
+        <div style="width:24px;height:24px;border-radius:50%;background:#1d2c4a;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;">🔄</div>
+      </div>
+      <div style="flex:1;background:#1d2c4a;border-radius:20px;padding:4px 14px;font-size:12px;color:#888;">🔒 &nbsp; www.bing.com</div>
+      <div style="font-size:16px;cursor:pointer;">⚙️</div>
+    </div>
+    <div style="padding:20px;text-align:center;">
+      <div style="font-size:28px;color:#4fc3f7;font-weight:300;margin-bottom:6px;">Microsoft Bing</div>
+      <div style="background:#1d2c4a;border-radius:30px;padding:10px 20px;display:flex;gap:10px;align-items:center;margin:16px auto;max-width:400px;border:1px solid rgba(255,255,255,0.1);">
+        <span style="font-size:16px;">🔍</span>
+        <div style="flex:1;color:#888;font-size:14px;text-align:left;">Search the web</div>
+        <span style="font-size:16px;">🎤</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:380px;margin:0 auto;">
+        ${['YouTube','GitHub','Gmail','Maps','Twitter','LinkedIn','Amazon','Reddit'].map(s=>`<div style="background:#1d2c4a;border-radius:8px;padding:10px;font-size:11px;color:#bbb;cursor:pointer;border:1px solid rgba(255,255,255,0.07);">${s}</div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+  makeWindow('edge','Microsoft Edge','🌐',600,420,content,'');
+}
+
+function openStore() {
+  const apps = [{ico:'🎮',name:'Xbox',price:'Free'},{ico:'📸',name:'Instagram',price:'Free'},{ico:'🎵',name:'Spotify',price:'Free'},{ico:'📺',name:'Netflix',price:'₹199/mo'},{ico:'✏️',name:'Canva',price:'Free'},{ico:'📦',name:'Whatsapp',price:'Free'}];
+  const content = `<div style="height:100%;overflow-y:auto;background:#111d35;">
+    <div style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);">
+      <div style="background:#1d2c4a;border-radius:8px;padding:8px 14px;font-size:12px;color:#888;">🔍 &nbsp; Search apps, games, and more</div>
+    </div>
+    <div style="padding:14px;">
+      <div style="font-size:18px;color:#fff;font-weight:300;margin-bottom:4px;">🎯 &nbsp; Featured</div>
+      <div style="background:linear-gradient(135deg,#1a3a6b,#0d47a1);border-radius:10px;padding:20px;margin-bottom:16px;">
+        <div style="font-size:14px;color:#4fc3f7;">Editor's Pick</div>
+        <div style="font-size:20px;color:#fff;font-weight:500;margin:4px 0;">Microsoft 365</div>
+        <div style="font-size:11px;color:#aaa;margin-bottom:10px;">Word, Excel, PowerPoint and more</div>
+        <div style="background:#4fc3f7;color:#000;padding:6px 16px;border-radius:6px;font-size:12px;font-weight:600;display:inline-block;cursor:pointer;">Install Free Trial</div>
+      </div>
+      <div style="font-size:13px;color:#888;margin-bottom:8px;">TOP FREE APPS</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        ${apps.map(a=>`<div style="background:#1d2c4a;border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px;cursor:pointer;border:1px solid rgba(255,255,255,0.07);">
+          <div style="font-size:32px;">${a.ico}</div>
+          <div><div style="font-size:13px;color:#ccc;">${a.name}</div><div style="font-size:11px;color:#4fc3f7;">${a.price}</div></div>
+          <div style="margin-left:auto;background:rgba(79,195,247,0.15);border-radius:4px;padding:3px 10px;font-size:11px;color:#4fc3f7;cursor:pointer;">Get</div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+  makeWindow('store','Microsoft Store','🛍️',520,440,content,'');
+}
+
+function openNotepad() {
+  const content = `<div style="height:100%;display:flex;flex-direction:column;">
+    <div style="background:#111d35;padding:4px 8px;border-bottom:1px solid rgba(255,255,255,0.07);font-size:11px;color:#888;display:flex;gap:16px;">
+      <span style="cursor:pointer;color:#ccc;">File</span><span style="cursor:pointer;color:#ccc;">Edit</span><span style="cursor:pointer;color:#ccc;">View</span><span style="cursor:pointer;color:#ccc;">Format</span><span style="cursor:pointer;color:#ccc;">Help</span>
+    </div>
+    <textarea id="notepad-area" style="flex:1;background:#0e1828;border:none;color:#e0e0e0;font-size:13px;font-family:Consolas,monospace;padding:12px;outline:none;resize:none;line-height:1.7;" placeholder="Start typing..."></textarea>
+    <div style="background:#111d35;padding:3px 10px;border-top:1px solid rgba(255,255,255,0.07);font-size:10px;color:#666;display:flex;justify-content:space-between;">
+      <span>Ln 1, Col 1</span><span>UTF-8</span><span>Windows (CRLF)</span>
+    </div>
+  </div>`;
+  makeWindow('notepad','Notepad','📝',480,360,content,'');
+}
+
+function openCalc() {
+  let display = '0', mem = 0, prevVal = '', op = '', justOp = false;
+  const calcId = 'calc';
+  const btns = [
+    ['%','CE','C','⌫'],
+    ['1/x','x²','√x','÷'],
+    ['7','8','9','×'],
+    ['4','5','6','−'],
+    ['1','2','3','+'],
+    ['+/−','0','.','='],
+  ];
+  const btnHtml = btns.map(row=>row.map(b=>{
+    const isOp = ['÷','×','−','+','='].includes(b);
+    const isSpec = ['%','CE','C','⌫'].includes(b);
+    const bg = isOp ? 'rgba(79,195,247,0.15)' : isSpec ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.05)';
+    const col = isOp ? '#4fc3f7' : '#fff';
+    return `<button onclick="calcPress('${b}')" style="background:${bg};color:${col};border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;font-size:15px;cursor:pointer;transition:background 0.1s;" onmouseover="this.style.filter='brightness(1.3)'" onmouseout="this.style.filter=''">${b}</button>`;
+  }).join('')).join('');
+  const content = `<div style="background:#111d35;height:100%;display:flex;flex-direction:column;">
+    <div style="padding:20px 16px 8px;text-align:right;">
+      <div id="calc-hist" style="font-size:12px;color:#666;min-height:18px;"></div>
+      <div id="calc-disp" style="font-size:36px;color:#fff;font-weight:300;">0</div>
+    </div>
+    <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 12px 12px;">${btnHtml}</div>
+  </div>`;
+  makeWindow('calc','Calculator','🧮',290,440,content,'');
+  window.calcPress = function(b) {
+    const disp = document.getElementById('calc-disp');
+    const hist = document.getElementById('calc-hist');
+    if(!disp) return;
+    if(b>='0'&&b<='9'||b==='.') {
+      if(justOp) { display=b; justOp=false; } else { display = display==='0'&&b!=='.' ? b : display+b; }
+    } else if(b==='C'||b==='CE') { display='0'; prevVal=''; op=''; if(hist)hist.textContent=''; }
+    else if(b==='⌫') { display = display.length>1 ? display.slice(0,-1) : '0'; }
+    else if(b==='%') { display = String(parseFloat(display)/100); }
+    else if(b==='+/−') { display = display.startsWith('-') ? display.slice(1) : '-'+display; }
+    else if(b==='x²') { display = String(Math.pow(parseFloat(display),2)); }
+    else if(b==='√x') { display = String(Math.sqrt(parseFloat(display))); }
+    else if(b==='1/x') { display = String(1/parseFloat(display)); }
+    else if(['÷','×','−','+'].includes(b)) {
+      prevVal = display; op = b; justOp = true;
+      if(hist)hist.textContent = display+' '+b;
+    } else if(b==='=') {
+      if(op&&prevVal) {
+        const a=parseFloat(prevVal), c=parseFloat(display);
+        let res = op==='÷'?(c?a/c:'ERR') : op==='×'?a*c : op==='−'?a-c : a+c;
+        if(hist)hist.textContent = prevVal+' '+op+' '+display+' =';
+        display = String(parseFloat(Number(res).toFixed(10)));
+        op=''; prevVal=''; justOp=true;
+      }
+    }
+    disp.textContent = display.length > 14 ? parseFloat(display).toExponential(6) : display;
+  };
+}
+
+function openTerminal() {
+  let history = ['Microsoft Windows Terminal [Version 12.0.26100]','(c) Microsoft Corporation. All rights reserved.','','C:\\Users\\Mohit> '];
+  const content = `<div style="height:100%;background:#0c1220;display:flex;flex-direction:column;">
+    <div style="background:#111d35;padding:4px 10px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;gap:10px;font-size:11px;color:#888;">
+      <span style="color:#4fc3f7;cursor:pointer;">+ PowerShell</span>
+      <span style="cursor:pointer;">cmd</span>
+      <span style="cursor:pointer;">WSL</span>
+    </div>
+    <div id="term-output" style="flex:1;padding:12px;font-family:Consolas,monospace;font-size:12px;color:#00ff88;overflow-y:auto;line-height:1.6;"></div>
+    <div style="display:flex;align-items:center;padding:6px 12px;border-top:1px solid rgba(255,255,255,0.07);">
+      <span style="color:#4fc3f7;font-family:Consolas;font-size:12px;">C:\\Users\\Mohit&gt; </span>
+      <input id="term-input" type="text" style="flex:1;background:none;border:none;color:#00ff88;font-family:Consolas;font-size:12px;outline:none;margin-left:4px;" placeholder="type a command...">
+    </div>
+  </div>`;
+  makeWindow('terminal','Windows Terminal','🖥️',560,380,content,'');
+  setTimeout(()=>{
+    const out = document.getElementById('term-output');
+    const inp = document.getElementById('term-input');
+    if(!out||!inp) return;
+    history.slice(0,-1).forEach(l=>{ const d=document.createElement('div'); d.textContent=l; d.style.color=l.includes('Microsoft')?'#aaa':'#00ff88'; out.appendChild(d); });
+    const cmds = {
+      'dir': 'Volume in drive C is Windows12\n Volume Serial Number is A4B2-C3D1\n\n Directory of C:\\Users\\Mohit\n\n 05/05/2026  10:22    <DIR>  Desktop\n 05/05/2026  09:14    <DIR>  Documents\n 04/05/2026  18:30    <DIR>  Downloads\n 04/05/2026  11:00  1,234,567  firmware.bin\n               1 File(s)  1,234,567 bytes',
+      'whoami': 'DESKTOP-WIN12\\Mohit',
+      'ipconfig': 'Windows IP Configuration\n\nEthernet adapter:\n   IPv4 Address: 192.168.1.105\n   Subnet Mask: 255.255.255.0\n   Default Gateway: 192.168.1.1',
+      'systeminfo': 'Host Name: DESKTOP-WIN12\nOS Name: Microsoft Windows 12 Pro\nOS Version: 12.0.26100\nSystem Type: x64-based PC\nTotal Physical Memory: 16,384 MB',
+      'cls': null,
+      'ver': 'Microsoft Windows [Version 12.0.26100.2024]',
+      'help': 'Available commands: dir, whoami, ipconfig, systeminfo, cls, ver, help, ping, echo',
+      'ping': 'Pinging google.com [142.250.183.46] with 32 bytes:\nReply from 142.250.183.46: bytes=32 time=12ms TTL=112\nReply from 142.250.183.46: bytes=32 time=11ms TTL=112\nPing statistics: Sent=4, Received=4, Lost=0 (0% loss)',
+    };
+    inp.addEventListener('keydown', function(e) {
+      if(e.key==='Enter') {
+        const cmd = this.value.trim().toLowerCase();
+        const prompt = document.createElement('div');
+        prompt.textContent = 'C:\\Users\\Mohit> ' + this.value;
+        prompt.style.color = '#4fc3f7';
+        out.appendChild(prompt);
+        if(cmd==='cls') { out.innerHTML=''; }
+        else if(cmds[cmd]!==undefined) {
+          const res = document.createElement('div');
+          res.style.whiteSpace = 'pre'; res.style.color = '#00ff88';
+          res.textContent = cmds[cmd];
+          out.appendChild(res);
+        } else if(cmd.startsWith('echo ')) {
+          const res = document.createElement('div'); res.textContent = cmd.slice(5); res.style.color='#fff'; out.appendChild(res);
+        } else if(cmd) {
+          const res = document.createElement('div'); res.style.color='#ff5555'; res.textContent=`'${cmd}' is not recognized as a command.`; out.appendChild(res);
+        }
+        this.value = '';
+        out.scrollTop = out.scrollHeight;
+      }
+    });
+    inp.focus();
+  }, 100);
+}
+
+function openMail() {
+  const mails = [
+    {from:'GitHub',sub:'New pull request: fix/esp32-i2s-driver',time:'10:24 AM',unread:true},
+    {from:'Team HR',sub:'Leave policy update - FY 2026',time:'9:15 AM',unread:true},
+    {from:'Ravi Sharma',sub:'Re: PCB review feedback',time:'Yesterday',unread:false},
+    {from:'Microsoft',sub:'Your Azure subscription',time:'Mon',unread:false},
+    {from:'Priya Mehta',sub:'Project meeting at 3 PM',time:'Sun',unread:false},
+  ];
+  const mailList = mails.map(m=>`<div onclick="this.parentNode.querySelectorAll('div').forEach(x=>x.style.background='');this.style.background='rgba(79,195,247,0.1)'" style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;display:flex;gap:8px;align-items:flex-start;">
+    <div style="width:34px;height:34px;border-radius:50%;background:rgba(79,195,247,0.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#4fc3f7;flex-shrink:0;">${m.from[0]}</div>
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;justify-content:space-between;"><span style="font-size:12px;color:${m.unread?'#fff':'#aaa'};font-weight:${m.unread?'600':'400'}">${m.from}</span><span style="font-size:10px;color:#666;">${m.time}</span></div>
+      <div style="font-size:11px;color:${m.unread?'#ccc':'#666'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.sub}</div>
+    </div>
+    ${m.unread?'<div style="width:8px;height:8px;background:#4fc3f7;border-radius:50%;flex-shrink:0;margin-top:6px;"></div>':''}
+  </div>`).join('');
+  const content = `<div style="display:flex;height:100%;">
+    <div style="width:44px;background:#0e1828;border-right:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:12px;">
+      ${['📬','📤','📥','⭐','🗑️'].map(i=>`<div style="font-size:18px;cursor:pointer;padding:6px;border-radius:6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background=''">${i}</div>`).join('')}
+    </div>
+    <div style="width:220px;border-right:1px solid rgba(255,255,255,0.07);overflow-y:auto;">${mailList}</div>
+    <div style="flex:1;padding:20px;background:#0a1420;">
+      <div style="font-size:15px;color:#fff;font-weight:500;margin-bottom:6px;">New pull request: fix/esp32-i2s-driver</div>
+      <div style="font-size:11px;color:#888;margin-bottom:14px;">From: GitHub &lt;noreply@github.com&gt; · To: mohit@outlook.com</div>
+      <div style="font-size:12px;color:#bbb;line-height:1.8;">
+        Hi Mohit,<br><br>
+        A new pull request has been opened in <span style="color:#4fc3f7;">esp32-voice-assistant</span>.<br><br>
+        <strong style="color:#fff;">fix/esp32-i2s-driver</strong><br>
+        Fix I2S driver conflict with legacy API in ESP-IDF v5.x<br><br>
+        <a href="#" style="color:#4fc3f7;text-decoration:none;background:rgba(79,195,247,0.1);padding:6px 14px;border-radius:6px;display:inline-block;">View Pull Request →</a>
+      </div>
+    </div>
+  </div>`;
+  makeWindow('mail','Mail','📧',640,420,content,'');
+}
+
+function openCalendarApp() {
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const today = new Date();
+  const d = today.getDate();
+  const events = {5:'Stand-up 9AM',10:'PCB Review',15:'Team Meeting 3PM',20:'Sprint Planning',25:'Release v2.0'};
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+  const dim = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
+  let cells = '';
+  for(let i=0;i<firstDay;i++) cells += '<div></div>';
+  for(let n=1;n<=dim;n++) {
+    const isT = n===d;
+    const ev = events[n];
+    cells += `<div style="border-radius:8px;padding:6px;background:${isT?'rgba(79,195,247,0.2)':'rgba(255,255,255,0.03)'};border:1px solid rgba(255,255,255,${isT?'0.2':'0.05'});min-height:52px;cursor:pointer;">
+      <div style="font-size:11px;color:${isT?'#4fc3f7':'#aaa'};font-weight:${isT?'600':'400'};">${n}</div>
+      ${ev?`<div style="font-size:9px;color:#4fc3f7;background:rgba(79,195,247,0.1);border-radius:3px;padding:2px 4px;margin-top:2px;">${ev}</div>`:''}
+    </div>`;
+  }
+  const content = `<div style="height:100%;display:flex;flex-direction:column;">
+    <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:15px;color:#fff;font-weight:500;">${today.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div>
+      <div style="display:flex;gap:6px;"><button style="background:rgba(255,255,255,0.07);border:none;color:#ccc;padding:4px 10px;border-radius:6px;cursor:pointer;">← Prev</button><button style="background:rgba(79,195,247,0.15);border:none;color:#4fc3f7;padding:4px 10px;border-radius:6px;cursor:pointer;">Today</button><button style="background:rgba(255,255,255,0.07);border:none;color:#ccc;padding:4px 10px;border-radius:6px;cursor:pointer;">Next →</button></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:8px;background:#1a2540;">
+      ${days.map(d=>`<div style="text-align:center;font-size:11px;color:#666;padding:4px;">${d}</div>`).join('')}
+      ${cells}
+    </div>
+  </div>`;
+  makeWindow('calendar','Calendar','📅',580,440,content,'');
+}
+
+function openPhotos() {
+  const colors = ['#1a237e','#1b5e20','#4a148c','#b71c1c','#e65100','#006064','#37474f','#880e4f','#33691e','#01579b','#3e2723','#004d40'];
+  const photos = colors.map((c,i)=>`<div onclick="this.parentNode.querySelectorAll('div').forEach(x=>x.style.outline='none');this.style.outline='2px solid #4fc3f7'" style="aspect-ratio:4/3;border-radius:6px;background:${c};cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:28px;transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform=''">${['🌅','🏞️','🌆','🎆','🌃','🏔️','🌊','🌸','🌌','🏙️','🌄','🎑'][i]}</div>`).join('');
+  const content = `<div style="height:100%;display:flex;flex-direction:column;">
+    <div style="padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;gap:8px;align-items:center;">
+      <div style="background:rgba(255,255,255,0.07);border-radius:6px;padding:4px 12px;font-size:11px;color:#4fc3f7;cursor:pointer;">Collection</div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:4px 12px;font-size:11px;color:#888;cursor:pointer;">Albums</div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:6px;padding:4px 12px;font-size:11px;color:#888;cursor:pointer;">People</div>
+      <div style="margin-left:auto;font-size:12px;color:#888;">12 photos</div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:10px;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">${photos}</div>
+    </div>
+  </div>`;
+  makeWindow('photos','Photos','🖼️',520,400,content,'');
+}
+
+function openMusic() {
+  const tracks = [
+    {name:'Kesariya',artist:'Arijit Singh',dur:'4:28'},
+    {name:'Blinding Lights',artist:'The Weeknd',dur:'3:20'},
+    {name:'Levitating',artist:'Dua Lipa',dur:'3:23'},
+    {name:'Stay',artist:'Justin Bieber',dur:'2:21'},
+    {name:'Dynamite',artist:'BTS',dur:'3:19'},
+  ];
+  const tList = tracks.map((t,i)=>`<div onclick="this.parentNode.querySelectorAll('[data-tr]').forEach(x=>{x.style.background='';x.querySelector('.play-ind').textContent='▶';});this.style.background='rgba(79,195,247,0.1)';this.querySelector('.play-ind').textContent='▶ ';document.getElementById('now-name').textContent='${t.name}';document.getElementById('now-artist').textContent='${t.artist}'" data-tr style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="">
+    <div class="play-ind" style="width:20px;font-size:12px;color:#4fc3f7;text-align:center;">▶</div>
+    <div style="width:36px;height:36px;border-radius:6px;background:rgba(79,195,247,0.15);display:flex;align-items:center;justify-content:center;font-size:20px;">🎵</div>
+    <div style="flex:1;"><div style="font-size:12px;color:#ccc;">${t.name}</div><div style="font-size:10px;color:#666;">${t.artist}</div></div>
+    <div style="font-size:11px;color:#666;">${t.dur}</div>
+  </div>`).join('');
+  const content = `<div style="height:100%;display:flex;flex-direction:column;">
+    <div style="background:linear-gradient(135deg,#1a237e,#0d47a1);padding:20px;display:flex;gap:16px;align-items:center;">
+      <div style="width:70px;height:70px;border-radius:10px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:40px;">🎵</div>
+      <div><div id="now-name" style="font-size:18px;color:#fff;font-weight:500;">Kesariya</div><div id="now-artist" style="font-size:12px;color:#aaa;">Arijit Singh</div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:12px;">
+        <span style="font-size:18px;cursor:pointer;color:#ccc;">⏮</span>
+        <span style="font-size:28px;cursor:pointer;color:#fff;">⏸</span>
+        <span style="font-size:18px;cursor:pointer;color:#ccc;">⏭</span>
+        <span style="font-size:16px;cursor:pointer;color:#888;margin-left:8px;">🔀</span>
+        <span style="font-size:16px;cursor:pointer;color:#888;">🔁</span>
+      </div>
+      <div style="margin-top:8px;background:rgba(255,255,255,0.2);height:3px;border-radius:2px;width:200px;"><div style="background:#4fc3f7;width:40%;height:100%;border-radius:2px;"></div></div>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:6px;">${tList}</div>
+  </div>`;
+  makeWindow('music','Media Player','🎵',440,420,content,'');
+}
+
+function openTeams() {
+  const msgs = [
+    {user:'Ravi',msg:'Hey Mohit, did you fix the I2S bug?',time:'10:22'},
+    {user:'Mohit',msg:'Yes! The >>14 shift was wrong, changed to >>11. Whisper accuracy is much better now.',time:'10:25',self:true},
+    {user:'Priya',msg:'Nice! Can you push the code to the repo?',time:'10:26'},
+    {user:'Mohit',msg:'Already pushed to feature/esp32-voice-fix 🚀',time:'10:27',self:true},
+    {user:'Ravi',msg:'Great work team! 🎉',time:'10:28'},
+  ];
+  const msgHtml = msgs.map(m=>`<div style="display:flex;gap:8px;justify-content:${m.self?'flex-end':'flex-start'};margin-bottom:10px;">
+    ${!m.self?`<div style="width:28px;height:28px;border-radius:50%;background:rgba(79,195,247,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#4fc3f7;flex-shrink:0;">${m.user[0]}</div>`:''}
+    <div style="max-width:70%;">
+      ${!m.self?`<div style="font-size:10px;color:#888;margin-bottom:2px;">${m.user}</div>`:''}
+      <div style="background:${m.self?'rgba(79,195,247,0.2)':'rgba(255,255,255,0.07)'};border-radius:10px;padding:8px 12px;font-size:12px;color:#e0e0e0;line-height:1.5;">${m.msg}</div>
+      <div style="font-size:9px;color:#555;margin-top:2px;text-align:${m.self?'right':'left'};">${m.time}</div>
+    </div>
+  </div>`).join('');
+  const content = `<div style="display:flex;height:100%;">
+    <div style="width:50px;background:#0e1828;border-right:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:12px;">
+      ${['💬','👥','📞','📁','⚙️'].map(i=>`<div style="font-size:18px;cursor:pointer;padding:6px;border-radius:6px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background=''">${i}</div>`).join('')}
+    </div>
+    <div style="width:160px;border-right:1px solid rgba(255,255,255,0.07);overflow-y:auto;">
+      <div style="padding:8px 10px;font-size:10px;color:#888;text-transform:uppercase;">Chats</div>
+      ${['Ravi Sharma','Priya Mehta','ESP32 Team','HR Channel'].map((n,i)=>`<div onclick="this.parentNode.querySelectorAll('div').forEach(x=>x.style.background='');this.style.background='rgba(79,195,247,0.1)'" style="display:flex;align-items:center;gap:6px;padding:7px 10px;cursor:pointer;">
+        <div style="width:28px;height:28px;border-radius:50%;background:rgba(79,195,247,0.15);display:flex;align-items:center;justify-content:center;font-size:11px;color:#4fc3f7;">${n[0]}</div>
+        <div style="font-size:11px;color:#bbb;">${n}</div>
+      </div>`).join('')}
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;">
+      <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.07);font-size:13px;color:#fff;">ESP32 Team</div>
+      <div style="flex:1;overflow-y:auto;padding:12px;">${msgHtml}</div>
+      <div style="padding:8px 12px;border-top:1px solid rgba(255,255,255,0.07);display:flex;gap:8px;">
+        <input type="text" placeholder="Type a message..." style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 12px;color:#fff;font-size:12px;outline:none;">
+        <button style="background:rgba(79,195,247,0.2);border:none;color:#4fc3f7;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:12px;">Send ↗</button>
+      </div>
+    </div>
+  </div>`;
+  makeWindow('teams','Microsoft Teams','👥',600,440,content,'');
+}
+</script>
